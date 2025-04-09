@@ -61,6 +61,7 @@ function simulate(pomcp::POMCPOWPlanner, h_node::POWTreeObsNode{B,A,O}, s::S, d)
             push!(tree.total_n, 0)
             push!(tree.tried, Int[])
             push!(tree.o_labels, o)
+            push!(tree.max_delta_ent, 0.0)
 
             if sol.check_repeat_obs
                 tree.a_child_lookup[(best_node, o)] = hao

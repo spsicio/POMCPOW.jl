@@ -28,6 +28,7 @@ export
     FORollout,
     FOValue,
 
+    MaxUCBe,
     MaxUCB,
     MaxQ,
     MaxTries,

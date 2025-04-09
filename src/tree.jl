@@ -13,6 +13,7 @@ struct POMCPOWTree{B,A,O,RB}
     tried::Vector{Vector{Int}}
     o_child_lookup::Dict{Tuple{Int,A}, Int} # may not be maintained based on solver params
     o_labels::Vector{O}
+    max_delta_ent::Vector{Float64}
 
     # root
     root_belief::RB
@@ -32,6 +33,7 @@ struct POMCPOWTree{B,A,O,RB}
             sizehint!(Vector{Int}[Int[]], sz),
             Dict{Tuple{Int,A}, Int}(),
             sizehint!(Array{O}(undef, 1), sz),
+            sizehint!(Float64[0.0], sz), # max_delta_ent
 
             root_belief
         )
