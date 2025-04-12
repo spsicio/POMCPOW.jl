@@ -2,6 +2,8 @@ struct MaxUCBe
     c::Float64
     e::Float64
     threshold::Int
+    discount::Float64
+    MaxUCBe(c, e; threshold=0, discount=1.0) = new(c, e, threshold, discount)
 end
 
 function select_best(crit::MaxUCBe, h_node::POWTreeObsNode, rng)
@@ -26,8 +28,8 @@ function select_best(crit::MaxUCBe, h_node::POWTreeObsNode, rng)
                 if tree.max_delta_ent[hao] > sub_max_delta_ent
                     sub_max_delta_ent = tree.max_delta_ent[hao]
                 end
-                if tree.max_delta_ent[hao] > tree.max_delta_ent[h] # BackPropagate
-                    tree.max_delta_ent[h] = tree.max_delta_ent[hao]
+                if crit.discount * tree.max_delta_ent[hao] > tree.max_delta_ent[h] # BackPropagate
+                    tree.max_delta_ent[h] = crit.discount * tree.max_delta_ent[hao]
                 end
             end
             delta_ent = (h == 1 ? 0 : tree.sr_beliefs[h].ent) - delta_ent / n
