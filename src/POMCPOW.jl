@@ -28,6 +28,9 @@ export
     FORollout,
     FOValue,
 
+    POWNodeFilter,
+    POWeNodeFilter,
+    POWgNodeFilter,
     MaxUCBe,
     MaxUCB,
     MaxQ,
