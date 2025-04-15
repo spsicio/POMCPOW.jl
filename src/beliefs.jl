@@ -52,13 +52,13 @@ POMDPs.currentobs(b::AbstractPOWNodeBelief) = b.o
 POMDPs.history(b::AbstractPOWNodeBelief) = tuple((a=b.a, o=b.o))
 
 abstract type AbstractPOWNodeFilter end
-struct POWNodeFilter end
-struct POWeNodeFilter end
-struct POWgNodeFilter end
+abstract type AbstractPOWeNodeFilter <: AbstractPOWNodeFilter end
+struct POWNodeFilter <: AbstractPOWNodeFilter end
+struct POWeNodeFilter <: AbstractPOWeNodeFilter end
+struct POWgNodeFilter <: AbstractPOWeNodeFilter end
 
 belief_type(::Type{POWNodeFilter}, ::Type{P}) where {P<:POMDP} = POWNodeBelief{statetype(P), actiontype(P), obstype(P), P}
-belief_type(::Type{POWeNodeFilter}, ::Type{P}) where {P<:POMDP} = POWeNodeBelief{statetype(P), actiontype(P), obstype(P), P}
-belief_type(::Type{POWgNodeFilter}, ::Type{P}) where {P<:POMDP} = POWeNodeBelief{statetype(P), actiontype(P), obstype(P), P}
+belief_type(::Type{<:AbstractPOWeNodeFilter}, ::Type{P}) where {P<:POMDP} = POWeNodeBelief{statetype(P), actiontype(P), obstype(P), P}
 
 init_node_sr_belief(::POWNodeFilter, p::POMDP, s, a, sp, o, r) = POWNodeBelief(p, s, a, sp, o, r)
 init_node_sr_belief(::POWeNodeFilter, p::POMDP, s, a, sp, o, r) = POWeNodeBelief(p, s, a, sp, o, r, ent_part_e)
@@ -86,6 +86,9 @@ function push_weighted!(b::POWeNodeBelief, ::POWgNodeFilter, s, sp, r)
     b.ent = ent_from_part_g(b.ent_partial, last(b.dist.cdf))
     b.ws[sp] = nxt
 end
+
+weighted_entropy(::POWNodeBelief, ::AbstractPOWNodeFilter) = 0.0
+weighted_entropy(b::POWeNodeBelief, ::AbstractPOWeNodeFilter) = n_items(b.dist) * b.ent
 
 struct StateBelief{SRB<:AbstractPOWNodeBelief}
     sr_belief::SRB

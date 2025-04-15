@@ -3,7 +3,8 @@ struct MaxUCBe
     e::Float64
     threshold::Int
     discount::Float64
-    MaxUCBe(c, e; threshold=0, discount=1.0) = new(c, e, threshold, discount)
+    chain::Bool
+    MaxUCBe(c, e; threshold=0, discount=1.0, chain=false) = new(c, e, threshold, discount, chain)
 end
 
 function select_best(crit::MaxUCBe, h_node::POWTreeObsNode, rng)
@@ -21,20 +22,13 @@ function select_best(crit::MaxUCBe, h_node::POWTreeObsNode, rng)
         elseif n == 0
             criterion_value = Inf
         else
-            delta_ent = 0
-            sub_max_delta_ent = 0
-            for (_, hao) in tree.generated[node]
-                delta_ent += tree.total_n[hao] * tree.sr_beliefs[hao].ent
-                if tree.max_delta_ent[hao] > sub_max_delta_ent
-                    sub_max_delta_ent = tree.max_delta_ent[hao]
+            delta_ent = (h == 1 ? 0 : tree.sr_beliefs[h].ent) - tree.a_sum_ent[node] / n
+            sub_max_delta_ent = crit.discount * tree.a_max_delta_ent[node]
+            if n > crit.threshold # BackPropagate
+                tmp = crit.chain ? delta_ent + sub_max_delta_ent : max(delta_ent, sub_max_delta_ent)
+                if tree.o_max_delta_ent[h] < tmp
+                    tree.o_max_delta_ent[h] = tmp
                 end
-                if crit.discount * tree.max_delta_ent[hao] > tree.max_delta_ent[h] # BackPropagate
-                    tree.max_delta_ent[h] = crit.discount * tree.max_delta_ent[hao]
-                end
-            end
-            delta_ent = (h == 1 ? 0 : tree.sr_beliefs[h].ent) - delta_ent / n
-            if n > crit.threshold && delta_ent > tree.max_delta_ent[h] # BackPropagate
-                tree.max_delta_ent[h] = delta_ent
             end
             criterion_value = n == 1 ? Inf :
                     tree.v[node] + crit.c * sqrt(ltn/n) +

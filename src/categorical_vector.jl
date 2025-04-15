@@ -1,17 +1,25 @@
 mutable struct CategoricalVector{T}
     items::Vector{T}
     cdf::Vector{Float64}
+    n::Int
 
-    CategoricalVector{T}(item::T, weight) where T = new(T[item], Float64[weight])
+    CategoricalVector{T}(item::T, weight) where T = new(T[item], Float64[weight], 1)
 end
 
 CategoricalVector(item::T, weight) where T = CategoricalVector{T}(item, weight)
 
-n_items(d::CategoricalVector) = length(d.items)
+n_items(d::CategoricalVector) = d.n
 
 function insert!(c::CategoricalVector, item, weight)
-    push!(c.items, item)
-    push!(c.cdf, c.cdf[end]+weight)
+    if weight != 0
+        if c.items[end] == item
+            c.cdf[end] += weight
+        else
+            push!(c.items, item)
+            push!(c.cdf, c.cdf[end]+weight)
+        end
+    end
+    c.n += 1;
 end
 
 function rand(rng::AbstractRNG, d::CategoricalVector)

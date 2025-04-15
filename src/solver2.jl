@@ -61,12 +61,13 @@ function simulate(pomcp::POMCPOWPlanner, h_node::POWTreeObsNode{B,A,O}, s::S, d)
             push!(tree.total_n, 0)
             push!(tree.tried, Int[])
             push!(tree.o_labels, o)
-            push!(tree.max_delta_ent, 0.0)
+            push!(tree.o_max_delta_ent, 0.0)
 
             if sol.check_repeat_obs
                 tree.a_child_lookup[(best_node, o)] = hao
             end
             tree.n_a_children[best_node] += 1
+            tree.a_sum_ent[best_node] += weighted_entropy(tree.sr_beliefs[hao], pomcp.node_sr_belief_updater)
         end
         push!(tree.generated[best_node], o=>hao)
     else
@@ -85,10 +86,15 @@ function simulate(pomcp::POMCPOWPlanner, h_node::POWTreeObsNode{B,A,O}, s::S, d)
         pair = rand(sol.rng, tree.generated[best_node])
         o = pair.first
         hao = pair.second
+        tree.a_sum_ent[best_node] -= weighted_entropy(tree.sr_beliefs[hao], pomcp.node_sr_belief_updater)
         push_weighted!(tree.sr_beliefs[hao], pomcp.node_sr_belief_updater, s, sp, r)
+        tree.a_sum_ent[best_node] += weighted_entropy(tree.sr_beliefs[hao], pomcp.node_sr_belief_updater)
         sp, r = rand(sol.rng, tree.sr_beliefs[hao])
 
         R = r + POMDPs.discount(pomcp.problem)*simulate(pomcp, POWTreeObsNode(tree, hao), sp, d-1)
+        if tree.a_max_delta_ent[best_node] < tree.o_max_delta_ent[hao] # BackPropagate
+            tree.a_max_delta_ent[best_node] = tree.o_max_delta_ent[hao]
+        end
     end
 
     tree.n[best_node] += 1

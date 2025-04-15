@@ -6,6 +6,8 @@ struct POMCPOWTree{B,A,O,RB}
     a_child_lookup::Dict{Tuple{Int,O}, Int} # may not be maintained based on solver params
     a_labels::Vector{A}
     n_a_children::Vector{Int}
+    a_sum_ent::Vector{Float64}
+    a_max_delta_ent::Vector{Float64}
 
     # observation nodes
     sr_beliefs::Vector{B} # first element is #undef
@@ -13,7 +15,7 @@ struct POMCPOWTree{B,A,O,RB}
     tried::Vector{Vector{Int}}
     o_child_lookup::Dict{Tuple{Int,A}, Int} # may not be maintained based on solver params
     o_labels::Vector{O}
-    max_delta_ent::Vector{Float64}
+    o_max_delta_ent::Vector{Float64}
 
     # root
     root_belief::RB
@@ -27,13 +29,15 @@ struct POMCPOWTree{B,A,O,RB}
             Dict{Tuple{Int,O}, Int}(),
             sizehint!(A[], sz),
             sizehint!(Int[], sz),
+            sizehint!(Float64[], sz), # a_sum_ent
+            sizehint!(Float64[], sz), # a_max_delta_ent
 
             sizehint!(Array{B}(undef, 1), sz),
             sizehint!(Int[0], sz),
             sizehint!(Vector{Int}[Int[]], sz),
             Dict{Tuple{Int,A}, Int}(),
             sizehint!(Array{O}(undef, 1), sz),
-            sizehint!(Float64[0.0], sz), # max_delta_ent
+            sizehint!(Float64[0.0], sz), # o_max_delta_ent
 
             root_belief
         )
@@ -47,6 +51,8 @@ end
     push!(tree.generated, Pair{O,Int}[])
     push!(tree.a_labels, a)
     push!(tree.n_a_children, 0)
+    push!(tree.a_sum_ent, 0.0)
+    push!(tree.a_max_delta_ent, 0.0)
     if update_lookup
         tree.o_child_lookup[(h, a)] = anode
     end
